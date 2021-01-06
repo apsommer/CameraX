@@ -37,17 +37,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Request camera permissions
-        if (allPermissionsGranted()) {
-            startCamera()
-        } else {
+        // request camera permissions
+        if (allPermissionsGranted()) startCamera()
+        else {
             ActivityCompat.requestPermissions(
                     this,
                     REQUIRED_PERMISSIONS,
                     REQUEST_CODE_PERMISSIONS)
         }
 
-        // Set up the listener for take photo button
+        // listen to button click
         camera_capture_button.setOnClickListener { takePhoto() }
 
         // get directory for saved image
@@ -57,8 +56,43 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-    // todo
-    private fun takePhoto() {}
+    // capture image
+    private fun takePhoto() {
+
+        // get a stable reference of the modifiable image capture use case
+        val imageCapture = imageCapture?: return // will be null if attempt to take photo before camera initialized!
+
+        // create time-stamped output file to hold the image
+        val photoFile = File(
+                outputDirectory,
+                SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+                        .format(System.currentTimeMillis()) + ".jpg")
+
+        // create output options which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        // listen to image capture
+        imageCapture.takePicture(
+                outputOptions, // file options
+                ContextCompat.getMainExecutor(this), // execute on main thread
+                object : ImageCapture.OnImageSavedCallback {
+
+                    // success
+                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+
+                        // toast and log file location
+                        val savedUri = Uri.fromFile(photoFile)
+                        val msg = "Photo capture succeeded: $savedUri"
+                        Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        Log.d(TAG, msg)
+                    }
+
+                    // error on capture or save
+                    override fun onError(exc: ImageCaptureException) {
+                        Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                    }
+        })
+    }
 
     // initialize the camera
     private fun startCamera() {
@@ -76,6 +110,9 @@ class MainActivity : AppCompatActivity() {
             val preview = Preview.Builder().build()
                     .also { it.setSurfaceProvider(viewFinder.createSurfaceProvider()) }
 
+            // create image capture use case
+            imageCapture = ImageCapture.Builder().build()
+
             // set back camera as default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -84,16 +121,12 @@ class MainActivity : AppCompatActivity() {
                 // clear any previous bindings
                 cameraProvider.unbindAll()
 
-                // bind lifecycles of selector and preview to this activity
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+                // bind lifecycles of all use cases to this activity lifecycle
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
 
             } catch(exc: Exception) { Log.e(TAG, "Use case binding failed", exc) }
 
         }, ContextCompat.getMainExecutor(this)) // main thread executor
-    }
-
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun getOutputDirectory(): File {
@@ -104,9 +137,8 @@ class MainActivity : AppCompatActivity() {
             mediaDir else filesDir
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onRequestPermissionsResult(
@@ -130,5 +162,10 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
     }
 }
