@@ -60,8 +60,37 @@ class MainActivity : AppCompatActivity() {
     // todo
     private fun takePhoto() {}
 
-    // todo
-    private fun startCamera() {}
+    // initialize the camera
+    private fun startCamera() {
+
+        // create camera future
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        // listen to future
+        cameraProviderFuture.addListener(Runnable {
+
+            // get reference to provider, used to bind camera lifecycle to activity lifecycle
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // create preview and associate it to xml viewfinder
+            val preview = Preview.Builder().build()
+                    .also { it.setSurfaceProvider(viewFinder.createSurfaceProvider()) }
+
+            // set back camera as default
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+
+                // clear any previous bindings
+                cameraProvider.unbindAll()
+
+                // bind lifecycles of selector and preview to this activity
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+
+            } catch(exc: Exception) { Log.e(TAG, "Use case binding failed", exc) }
+
+        }, ContextCompat.getMainExecutor(this)) // main thread executor
+    }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
