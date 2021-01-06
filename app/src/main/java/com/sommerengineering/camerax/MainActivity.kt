@@ -113,6 +113,15 @@ class MainActivity : AppCompatActivity() {
             // create image capture use case
             imageCapture = ImageCapture.Builder().build()
 
+            // create image analyzer
+            val imageAnalyzer = ImageAnalysis.Builder().build()
+                    .also {
+                        it.setAnalyzer(
+                                cameraExecutor,
+                                LuminosityAnalyzer { luma -> Log.d(TAG, "Average luminosity: $luma") })
+                    }
+
+
             // set back camera as default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -122,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.unbindAll()
 
                 // bind lifecycles of all use cases to this activity lifecycle
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalyzer)
 
             } catch(exc: Exception) { Log.e(TAG, "Use case binding failed", exc) }
 
@@ -167,5 +176,29 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+    }
+
+    // image analyzer
+    private class LuminosityAnalyzer(private val listener: LumaListener) : ImageAnalysis.Analyzer {
+
+        private fun ByteBuffer.toByteArray(): ByteArray {
+            rewind()    // Rewind the buffer to zero
+            val data = ByteArray(remaining())
+            get(data)   // Copy the buffer into a byte array
+            return data // Return the byte array
+        }
+
+        // analyze image frame
+        override fun analyze(image: ImageProxy) {
+
+            val buffer = image.planes[0].buffer
+            val data = buffer.toByteArray()
+            val pixels = data.map { it.toInt() and 0xFF }
+            val luma = pixels.average()
+
+            listener(luma)
+
+            image.close()
+        }
     }
 }
