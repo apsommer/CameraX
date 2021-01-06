@@ -79,4 +79,27 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         cameraExecutor.shutdown()
     }
+
+    override fun onRequestPermissionsResult(
+
+            requestCode: Int,
+            permissions: Array<String>,
+            grantResults: IntArray) {
+
+        // validate request code
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+
+            // permissions granted, start camera
+            if (allPermissionsGranted()) startCamera()
+
+            // not granted, toast message
+            else {
+
+                Toast.makeText(this,
+                        "Permissions not granted by the user.",
+                        Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
+    }
 }
