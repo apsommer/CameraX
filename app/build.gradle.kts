@@ -66,4 +66,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    val cameraX = "1.4.1"
+    implementation ("androidx.camera:camera-core:${cameraX}")
+    implementation ("androidx.camera:camera-camera2:${cameraX}")
+    implementation ("androidx.camera:camera-view:${cameraX}")
+    implementation ("androidx.camera:camera-lifecycle:$cameraX")
 }
