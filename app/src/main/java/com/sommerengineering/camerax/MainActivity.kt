@@ -20,8 +20,27 @@ import com.sommerengineering.camerax.ui.theme.CameraXTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val cameraPermissionRequest =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    private val cameraPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+
+            var isPermissionsGranted = true
+            permissions.entries.forEach {
+                if (it.key in requiredPermissions && it.value == false) {
+                    isPermissionsGranted = false
+                }
+            }
+
+            if (!isPermissionsGranted) {
+                // permissions denied by user
+            } else {
+                // start camera
+            }
+        }
+
+    private val requiredPermissions = mutableListOf(
+        android.Manifest.permission.CAMERA,
+        android.Manifest.permission.RECORD_AUDIO
+    ).toTypedArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +50,7 @@ class MainActivity : ComponentActivity() {
         if (ContextCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            cameraPermissionRequest.launch(android.Manifest.permission.CAMERA)
+            cameraPermissionRequest.launch(requiredPermissions)
         }
 
         setContent {
@@ -48,7 +67,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Greeting(
+    name: String,
+    modifier: Modifier = Modifier) {
     Text(
         text = "Hello $name!",
         modifier = modifier
