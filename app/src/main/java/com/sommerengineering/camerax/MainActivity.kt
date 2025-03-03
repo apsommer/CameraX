@@ -2,16 +2,20 @@ package com.sommerengineering.camerax
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.registerForActivityResult
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.sommerengineering.camerax.ui.theme.CameraXTheme
 import java.util.concurrent.ExecutorService
+
+const val TAG = "~"
 
 class MainActivity : ComponentActivity() {
 
@@ -56,7 +62,7 @@ class MainActivity : ComponentActivity() {
             }
 
             if (!isPermissionsGranted) {
-                // permissions denied by user
+                Log.d(TAG, "User denied permissions")
             } else {
                 startCamera()
             }
@@ -78,7 +84,34 @@ class MainActivity : ComponentActivity() {
     }
     
     fun startCamera() {
-        // todo
+
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        cameraProviderFuture.addListener(
+            {
+
+                val cameraProvider = cameraProviderFuture.get()
+
+                val preview = androidx.camera.core.Preview.Builder()
+                    .build()
+                    .also {
+                        it.setSurfaceProvider {
+                            PreviewView(this).surfaceProvider // todo refactor to composable and remember
+                        }
+                    }
+
+                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        this, cameraSelector, preview)
+
+                } catch(e: Exception) {
+                    Log.d(TAG, "Use case binding failed")
+                }
+            },
+            ContextCompat.getMainExecutor(this))
     }
 }
 
@@ -95,7 +128,8 @@ fun App() {
                         top = 96.dp,
                         bottom = 48.dp,
                         start = 48.dp,
-                        end = 48.dp),
+                        end = 48.dp
+                    ),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally) {
 
