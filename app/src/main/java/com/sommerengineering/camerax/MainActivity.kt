@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,15 +38,8 @@ import com.sommerengineering.camerax.ui.theme.CameraXTheme
 import java.util.concurrent.ExecutorService
 
 const val TAG = "~"
-val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
 class MainActivity : ComponentActivity() {
-
-    // init camera
-    lateinit var imageCapture: ImageCapture
-    lateinit var videoCapture: VideoCapture<Recorder>
-    lateinit var recording: Recording
-    lateinit var executor: ExecutorService
 
     private val requiredPermissions = mutableListOf(
         android.Manifest.permission.CAMERA,
@@ -128,7 +122,12 @@ fun App() {
                         text = "Capture video")
                 }
 
-                Surface {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 48.dp),
+                    color = MaterialTheme.colorScheme.onSurface) {
+
                     CameraXPreview()
                 }
             }
