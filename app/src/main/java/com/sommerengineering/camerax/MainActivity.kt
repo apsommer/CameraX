@@ -37,6 +37,7 @@ import com.sommerengineering.camerax.ui.theme.CameraXTheme
 import java.util.concurrent.ExecutorService
 
 const val TAG = "~"
+val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
 class MainActivity : ComponentActivity() {
 
@@ -52,66 +53,41 @@ class MainActivity : ComponentActivity() {
     ).toTypedArray()
 
     private val cameraPermissionRequest = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
 
-            var isPermissionsGranted = true
-            permissions.entries.forEach {
-                if (it.key in requiredPermissions && !it.value) {
-                    isPermissionsGranted = false
-                }
-            }
-
-            if (!isPermissionsGranted) {
-                Log.d(TAG, "User denied permissions")
-            } else {
-                startCamera()
+        // ensure all required permissions is granted
+        var isPermissionsGranted = true
+        permissions.entries.forEach {
+            if (it.key in requiredPermissions && !it.value) {
+                isPermissionsGranted = false
             }
         }
+
+        if (!isPermissionsGranted) { Log.d(TAG, "User denied permissions") }
+        else { startCamera() }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // start camera, or request camera permissions
+        // request camera permissions, if necessary
         val isPermissionsGranted = requiredPermissions.all {
             ContextCompat.checkSelfPermission(baseContext, it) ==
                 PackageManager.PERMISSION_GRANTED
         }
-        if (isPermissionsGranted) { startCamera() }
-        else { cameraPermissionRequest.launch(requiredPermissions) }
-        
-        setContent { App() }
+
+        if (!isPermissionsGranted) {
+            cameraPermissionRequest.launch(requiredPermissions)
+            return
+        }
+
+        startCamera()
     }
-    
-    fun startCamera() {
 
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
-        cameraProviderFuture.addListener(
-            {
-
-                val cameraProvider = cameraProviderFuture.get()
-
-                val preview = androidx.camera.core.Preview.Builder()
-                    .build()
-                    .also {
-                        it.setSurfaceProvider {
-                            PreviewView(this).surfaceProvider // todo refactor to composable and remember
-                        }
-                    }
-
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        this, cameraSelector, preview)
-
-                } catch(e: Exception) {
-                    Log.d(TAG, "Use case binding failed")
-                }
-            },
-            ContextCompat.getMainExecutor(this))
+    private fun startCamera() {
+        setContent { App() }
     }
 }
 
@@ -150,6 +126,10 @@ fun App() {
                     onClick = { }) {
                     Text(
                         text = "Capture video")
+                }
+
+                Surface {
+                    CameraXPreview()
                 }
             }
         }
