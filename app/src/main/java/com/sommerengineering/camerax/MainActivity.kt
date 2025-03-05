@@ -29,10 +29,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.sommerengineering.camerax.ui.theme.CameraXTheme
 import java.util.concurrent.ExecutorService
@@ -87,6 +92,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App() {
+
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // init camera use cases
+    val preview = androidx.camera.core.Preview.Builder().build()
+    val previewView = remember { PreviewView(context) }
+    val imageCapture = remember { ImageCapture.Builder().build() }
+
+    LaunchedEffect(Unit) {
+
+        val cameraProvider = context.getCameraProvider()
+        cameraProvider.unbindAll()
+        cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            preview)
+        preview.surfaceProvider = previewView.surfaceProvider
+    }
+
     CameraXTheme {
         Surface (
             modifier = Modifier.fillMaxSize()) {
@@ -128,7 +153,11 @@ fun App() {
                         .padding(top = 48.dp),
                     color = MaterialTheme.colorScheme.onSurface) {
 
-                    CameraXPreview()
+                    AndroidView(
+                        factory = {
+                            previewView
+                        },
+                        modifier = Modifier.fillMaxSize())
                 }
             }
         }
