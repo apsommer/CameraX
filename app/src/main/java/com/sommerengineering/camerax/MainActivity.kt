@@ -108,7 +108,8 @@ fun App() {
         cameraProvider.bindToLifecycle(
             lifecycleOwner,
             CameraSelector.DEFAULT_BACK_CAMERA,
-            preview)
+            preview,
+            imageCapture)
         preview.surfaceProvider = previewView.surfaceProvider
     }
 
@@ -128,10 +129,10 @@ fun App() {
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally) {
 
-                // image
+                // image capture
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { }) {
+                    onClick = { captureImage(imageCapture, context) }) {
                     Text(
                         text = "Capture image")
                 }
@@ -154,15 +155,15 @@ fun App() {
                     color = MaterialTheme.colorScheme.onSurface) {
 
                     AndroidView(
-                        factory = {
-                            previewView
-                        },
+                        factory = { previewView },
                         modifier = Modifier.fillMaxSize())
                 }
             }
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @Preview(showBackground = true)
 @Composable
