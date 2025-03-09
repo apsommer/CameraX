@@ -1,6 +1,8 @@
 package com.sommerengineering.camerax
 
+import android.util.Log
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.sommerengineering.camerax.ui.theme.CameraXTheme
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 @Composable
 fun App() {
@@ -35,6 +39,7 @@ fun App() {
     val preview = androidx.camera.core.Preview.Builder().build()
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
+    val imageAnalyzer = remember { ImageAnalysis.Builder().build() }
 
     LaunchedEffect(Unit) {
 
@@ -44,8 +49,17 @@ fun App() {
             lifecycleOwner,
             CameraSelector.DEFAULT_BACK_CAMERA,
             preview,
-            imageCapture)
+            imageCapture,
+            imageAnalyzer)
+
+        // configure use cases
         preview.surfaceProvider = previewView.surfaceProvider
+        imageAnalyzer.setAnalyzer(
+            Executors.newSingleThreadExecutor(),
+            LuminosityAnalyzer { luma ->
+                Log.d(TAG, "App() called with: luma = $luma")
+            }
+        )
     }
 
     CameraXTheme {
