@@ -90,83 +90,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun App() {
-
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    // init camera use cases
-    val preview = androidx.camera.core.Preview.Builder().build()
-    val previewView = remember { PreviewView(context) }
-    val imageCapture = remember { ImageCapture.Builder().build() }
-
-    LaunchedEffect(Unit) {
-
-        val cameraProvider = context.getCameraProvider()
-        cameraProvider.unbindAll()
-        cameraProvider.bindToLifecycle(
-            lifecycleOwner,
-            CameraSelector.DEFAULT_BACK_CAMERA,
-            preview,
-            imageCapture)
-        preview.surfaceProvider = previewView.surfaceProvider
-    }
-
-    CameraXTheme {
-        Surface (
-            modifier = Modifier.fillMaxSize()) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = 96.dp,
-                        bottom = 48.dp,
-                        start = 48.dp,
-                        end = 48.dp
-                    ),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally) {
-
-                // image capture
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { captureImage(imageCapture, context) }) {
-                    Text(
-                        text = "Capture image")
-                }
-
-                Spacer(
-                    modifier = Modifier.size(48.dp))
-
-                // video
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { }) {
-                    Text(
-                        text = "Capture video")
-                }
-
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 48.dp),
-                    color = MaterialTheme.colorScheme.onSurface) {
-
-                    AndroidView(
-                        factory = { previewView },
-                        modifier = Modifier.fillMaxSize())
-                }
-            }
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun AppPreview() {
     App()
 }
