@@ -1,9 +1,11 @@
 package com.sommerengineering.camerax
 
+import android.content.Context
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,9 +27,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.sommerengineering.camerax.ui.theme.CameraXTheme
-import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun App() {
@@ -43,6 +47,7 @@ fun App() {
 
     LaunchedEffect(Unit) {
 
+        // bind use cases to activity lifecycle
         val cameraProvider = context.getCameraProvider()
         cameraProvider.unbindAll()
         cameraProvider.bindToLifecycle(
@@ -58,8 +63,7 @@ fun App() {
             Executors.newSingleThreadExecutor(),
             LuminosityAnalyzer { luma ->
                 Log.d(TAG, "App() called with: luma = $luma")
-            }
-        )
+            })
     }
 
     CameraXTheme {
@@ -111,3 +115,16 @@ fun App() {
         }
     }
 }
+
+suspend fun Context.getCameraProvider()
+    : ProcessCameraProvider =
+
+    suspendCoroutine { continuation ->
+        ProcessCameraProvider
+            .getInstance(this)
+            .also {
+                it.addListener(
+                    { continuation.resume(it.get()) },
+                    ContextCompat.getMainExecutor(this))
+            }
+    }

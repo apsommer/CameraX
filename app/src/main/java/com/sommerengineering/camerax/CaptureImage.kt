@@ -6,27 +6,12 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-
-suspend fun Context.getCameraProvider()
-    : ProcessCameraProvider =
-
-    suspendCoroutine { continuation ->
-        ProcessCameraProvider
-            .getInstance(this)
-            .also {
-                it.addListener(
-                    { continuation.resume(it.get()) },
-                    ContextCompat.getMainExecutor(this))
-            }
-    }
 
 fun captureImage(
     imageCapture: ImageCapture,
-    context: Context) {
+    context: Context
+) {
 
     // configure file options
     val filename = "CameraX.jpeg"
