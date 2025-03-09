@@ -14,7 +14,6 @@ fun captureImage(
 ) {
 
     // configure file options
-    val filename = "CameraX.jpeg"
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
         put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
