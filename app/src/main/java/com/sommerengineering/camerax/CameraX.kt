@@ -110,15 +110,14 @@ fun App() {
 
                 val apples: Recording? = null
                 val recording = remember { mutableStateOf(apples) }
-                val isVideoRecording = remember { mutableStateOf(false) }
 
                 // video
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { captureVideo(videoCapture, isVideoRecording, recording, context) }) {
+                    onClick = { captureVideo(videoCapture, recording, context) }) {
 
                     val text =
-                        if (isVideoRecording.value) "Stop capture video"
+                        if (recording.value != null) "STOP capture video"
                         else "Start capture video"
 
                     Text(text = text)

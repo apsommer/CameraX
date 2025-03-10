@@ -15,13 +15,11 @@ import androidx.core.content.PermissionChecker
 
 fun captureVideo(
     videoCapture: VideoCapture<Recorder>,
-    isVideoRecording: MutableState<Boolean>,
     recording: MutableState<Recording?>,
     context: Context) {
 
-    if (isVideoRecording.value) {
+    if (recording.value != null) {
         recording.value?.stop()
-        isVideoRecording.value = false
         return
     }
 
@@ -38,8 +36,7 @@ fun captureVideo(
         .setContentValues(contentValues)
         .build()
 
-    var recording: Recording? = null
-    recording = videoCapture.output
+    recording.value = videoCapture.output
         .prepareRecording(
             context,
             outputOptions)
@@ -53,17 +50,13 @@ fun captureVideo(
         }
         .start(ContextCompat.getMainExecutor(context)) {
             when(it) {
-                is VideoRecordEvent.Start -> {
-                    isVideoRecording.value = true
-                }
                 is VideoRecordEvent.Finalize -> {
                     if (it.hasError()) { Log.d(TAG, "captureVideo() error: ${it.error}") }
                     else {
-                        recording?.close()
-                        recording = null
+                        recording.value?.close()
                         Log.d(TAG, "captureVideo(): ${it.outputResults.outputUri}")
                     }
-                    isVideoRecording.value = false
+                    recording.value = null
                 }
             }
         }
