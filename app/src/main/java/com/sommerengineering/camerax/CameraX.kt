@@ -6,6 +6,11 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +25,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,9 +50,14 @@ fun App() {
 
     // init camera use cases
     val preview = androidx.camera.core.Preview.Builder().build()
+    val recorder = Recorder.Builder()
+        .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+        .build()
+
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
     val imageAnalyzer = remember { ImageAnalysis.Builder().build() }
+    val videoCapture = remember { VideoCapture.withOutput(recorder) }
 
     LaunchedEffect(Unit) {
 
@@ -54,8 +68,9 @@ fun App() {
             lifecycleOwner,
             CameraSelector.DEFAULT_BACK_CAMERA,
             preview,
-            imageCapture,
-            imageAnalyzer)
+            // imageCapture,
+            // imageAnalyzer,
+            videoCapture)
 
         // configure use cases
         preview.surfaceProvider = previewView.surfaceProvider
@@ -93,12 +108,20 @@ fun App() {
                 Spacer(
                     modifier = Modifier.size(48.dp))
 
+                val apples: Recording? = null
+                val recording = remember { mutableStateOf(apples) }
+                val isVideoRecording = remember { mutableStateOf(false) }
+
                 // video
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { }) {
-                    Text(
-                        text = "Capture video")
+                    onClick = { captureVideo(videoCapture, isVideoRecording, recording, context) }) {
+
+                    val text =
+                        if (isVideoRecording.value) "Stop capture video"
+                        else "Start capture video"
+
+                    Text(text = text)
                 }
 
                 Surface(
