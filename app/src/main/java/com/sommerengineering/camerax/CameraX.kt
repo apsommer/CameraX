@@ -6,6 +6,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
 import androidx.camera.video.Recorder
@@ -48,7 +49,9 @@ fun App() {
     // init camera use cases
     val preview = androidx.camera.core.Preview.Builder().build()
     val recorder = Recorder.Builder()
-        .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+        .setQualitySelector(QualitySelector.from(
+            Quality.HIGHEST,
+            FallbackStrategy.higherQualityOrLowerThan(Quality.HD)))
         .build()
     val recording: Recording? = null
 
@@ -66,7 +69,7 @@ fun App() {
             lifecycleOwner,
             CameraSelector.DEFAULT_BACK_CAMERA,
             preview,
-            // imageCapture,
+             imageCapture,
             // imageAnalyzer,
             videoCapture)
 
