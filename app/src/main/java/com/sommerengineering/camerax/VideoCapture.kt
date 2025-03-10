@@ -10,10 +10,10 @@ import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 
 fun captureVideo(
     videoCapture: VideoCapture<Recorder>,
-
     context: Context) {
 
     val contentValues = ContentValues().apply {
@@ -29,24 +29,32 @@ fun captureVideo(
         .setContentValues(contentValues)
         .build()
 
-
-    val recording = videoCapture.output
+    var recording: Recording? = null
+    recording = videoCapture.output
         .prepareRecording(
             context,
             outputOptions)
-        // .apply { withAudioEnabled() }
+        .apply {
+            if (PermissionChecker.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.RECORD_AUDIO)
+                        == PermissionChecker.PERMISSION_GRANTED) {
+                withAudioEnabled()
+            }
+        }
         .start(ContextCompat.getMainExecutor(context)) {
             when(it) {
                 is VideoRecordEvent.Start -> {
                     // toggle button text
                 }
                 is VideoRecordEvent.Finalize -> {
-                    if (it.hasError()) { Log.d(TAG, "captureVideo() called with error: ${it.error}") }
+                    if (it.hasError()) { Log.d(TAG, "captureVideo() error: ${it.error}") }
                     else {
-                        Log.d(TAG, "captureVideo() called: ${it.outputResults.outputUri}")
-                        // todo close()
+                        Log.d(TAG, "captureVideo(): ${it.outputResults.outputUri}")
+                        recording?.close()
                     }
                 }
             }
+            // toggle button
         }
 }
