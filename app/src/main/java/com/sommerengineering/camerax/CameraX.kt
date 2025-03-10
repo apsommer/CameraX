@@ -25,11 +25,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +50,7 @@ fun App() {
     val recorder = Recorder.Builder()
         .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
         .build()
+    val recording: Recording? = null
 
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
@@ -108,16 +106,20 @@ fun App() {
                 Spacer(
                     modifier = Modifier.size(48.dp))
 
-                val apples: Recording? = null
-                val recording = remember { mutableStateOf(apples) }
+                val recordingMutableState = remember { mutableStateOf(recording) }
 
                 // video
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { captureVideo(videoCapture, recording, context) }) {
+                    onClick = {
+                        captureVideo(
+                            videoCapture,
+                            recordingMutableState,
+                            context) }) {
 
+                    // toggle button text
                     val text =
-                        if (recording.value != null) "STOP capture video"
+                        if (recordingMutableState.value != null) "STOP capture video"
                         else "Start capture video"
 
                     Text(text = text)

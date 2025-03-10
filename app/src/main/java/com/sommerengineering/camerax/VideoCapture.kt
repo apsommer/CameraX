@@ -15,14 +15,16 @@ import androidx.core.content.PermissionChecker
 
 fun captureVideo(
     videoCapture: VideoCapture<Recorder>,
-    recording: MutableState<Recording?>,
+    recordingMutableState: MutableState<Recording?>,
     context: Context) {
 
-    if (recording.value != null) {
-        recording.value?.stop()
+    // stop current recording, if needed
+    if (recordingMutableState.value != null) {
+        recordingMutableState.value?.stop()
         return
     }
 
+    // init video file
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
         put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
@@ -36,7 +38,8 @@ fun captureVideo(
         .setContentValues(contentValues)
         .build()
 
-    recording.value = videoCapture.output
+    // start recording
+    recordingMutableState.value = videoCapture.output
         .prepareRecording(
             context,
             outputOptions)
@@ -53,10 +56,10 @@ fun captureVideo(
                 is VideoRecordEvent.Finalize -> {
                     if (it.hasError()) { Log.d(TAG, "captureVideo() error: ${it.error}") }
                     else {
-                        recording.value?.close()
+                        recordingMutableState.value?.close()
                         Log.d(TAG, "captureVideo(): ${it.outputResults.outputUri}")
                     }
-                    recording.value = null
+                    recordingMutableState.value = null
                 }
             }
         }
